@@ -1,20 +1,14 @@
 #!/usr/bin/env bash
-#set -x
 
-#rm -rf /opt/agent/logs/*.*
-#rm -rf /opt/agent/config.xml
-#sed -i "s|10000000|5|g" /opt/agent/properties/glide.properties
-
-CUSTOM_BIND_MOUNT=/opt/agent/custom_ca.crt
-CUSTOM_CA_CERT_FILE=/opt/agent/cacerts.crt
+CUSTOM_BIND_MOUNT=/opt/agent2/custom_ca.crt
+CUSTOM_CA_CERT_FILE=/opt/agent2/cacerts.crt
 CUSTOM_CA_ALIAS="${CUSTOM_CA_ALIAS:-dockerExtraCaCerts}"
 WGET_CUSTOM_CACERT=""
 
 # # # # #
 # remove the pid file on start to avoid mid start to hang
 # 
-rm -rf /opt/agent/work/mid.pid
-
+rm -rf /opt/agent2/work/mid.pid
 
 # # # # #
 # Add custom ca cert to java keystore 
@@ -40,12 +34,12 @@ if [[ -f ${CUSTOM_CA_CERT_FILE} ]]
 then
     WGET_CUSTOM_CACERT="--ca-certificate=${CUSTOM_CA_CERT_FILE}"
 
-    if [[ `/opt/agent/jre/bin/keytool -keystore /opt/agent/jre/lib/security/cacerts -storepass changeit -noprompt --list | grep -i ${CUSTOM_CA_ALIAS}  | wc -l` == 0 ]]
+    if [[ `/opt/agent2/jre/bin/keytool -keystore /opt/agent2/jre/lib/security/cacerts -storepass changeit -noprompt --list | grep -i ${CUSTOM_CA_ALIAS}  | wc -l` == 0 ]]
     then 
-        echo "DOCKER: adding customCaCert with alias '${CUSTOM_CA_ALIAS}' to /opt/agent/jre/lib/security/cacerts"
-        /opt/agent/jre/bin/keytool -import -alias ${CUSTOM_CA_ALIAS} -file ${CUSTOM_CA_CERT_FILE} -keystore /opt/agent/jre/lib/security/cacerts -storepass changeit -noprompt
+        echo "DOCKER: adding customCaCert with alias '${CUSTOM_CA_ALIAS}' to /opt/agent2/jre/lib/security/cacerts"
+        /opt/agent2/jre/bin/keytool -import -alias ${CUSTOM_CA_ALIAS} -file ${CUSTOM_CA_CERT_FILE} -keystore /opt/agent2/jre/lib/security/cacerts -storepass changeit -noprompt
     else 
-        echo "DOCKER: customCaCert already in /opt/agent/jre/lib/security/cacerts"
+        echo "DOCKER: customCaCert already in /opt/agent2/jre/lib/security/cacerts"
     fi 
 else 
     echo "DOCKER: no customCaCert file defined"
@@ -57,12 +51,12 @@ fi
 # If the container is killed before the setup has completed and the MID
 # was registered correctly, the sys_id is missing in the config.xml file
 #
-if [[ -f /opt/agent/config.xml ]]
+if [[ -f /opt/agent2/config.xml ]]
 then
-    if [[ -z `grep -oP 'name="mid_sys_id" value="\K[^"]{32}' /opt/agent/config.xml` ]]
+    if [[ -z `grep -oP 'name="mid_sys_id" value="\K[^"]{32}' /opt/agent2/config.xml` ]]
     then
         echo "Docker: config.xml invalid, reconfigure MID server"
-        rm -rf /opt/agent/config.xml 
+        rm -rf /opt/agent2/config.xml 
     fi
 fi
 
@@ -70,49 +64,49 @@ fi
 # First run, configure the properties in config.xml
 # subsequent run, ensure MID status is down
 # 
-if [[ ! -f /opt/agent/config.xml ]]
+if [[ ! -f /opt/agent2/config.xml ]]
 then
     
-    cp /opt/config.xml /opt/agent/.
+    cp /opt/config.xml /opt/agent2/.
     
     if [[ ! -z "$SN_HOST_NAME" ]]
     then
         echo "Docker: configuring Host Name: $SN_HOST_NAME (using \$SN_HOST_NAME)"
-        sed -i "s|https://YOUR_INSTANCE.service-now.com|https://${SN_HOST_NAME}|g" /opt/agent/config.xml
+        sed -i "s|https://YOUR_INSTANCE.service-now.com|https://${SN_HOST_NAME}|g" /opt/agent2/config.xml
     elif [[ ! -z "$HOST" ]]
     then
         echo "Docker: configuring Host Name: ${HOST}.service-now.com (using \$HOST)"
-        sed -i "s|https://YOUR_INSTANCE.service-now.com|https://${HOST}.service-now.com|g" /opt/agent/config.xml
+        sed -i "s|https://YOUR_INSTANCE.service-now.com|https://${HOST}.service-now.com|g" /opt/agent2/config.xml
     fi
     
-    sed -i "s|YOUR_INSTANCE_USER_NAME_HERE|${USER_NAME}|g" /opt/agent/config.xml
-    sed -i "s|YOUR_INSTANCE_PASSWORD_HERE|${PASSWORD}|g" /opt/agent/config.xml
-    sed -i "s|YOUR_MIDSERVER_NAME_GOES_HERE|${HOSTNAME}-mid.docker|g" /opt/agent/config.xml
+    sed -i "s|YOUR_INSTANCE_USER_NAME_HERE|${USER_NAME}|g" /opt/agent2/config.xml
+    sed -i "s|YOUR_INSTANCE_PASSWORD_HERE|${PASSWORD}|g" /opt/agent2/config.xml
+    sed -i "s|YOUR_MIDSERVER_NAME_GOES_HERE|${HOSTNAME}-mid.docker|g" /opt/agent2/config.xml
     
     if [[ ! -z "$PIN" ]]
     then
-        sed -i "s|</parameters>|    <parameter name=\"mid.pinned.version\" value=\"${PIN}\"/>\n\n</parameters>|g" /opt/agent/config.xml
+        sed -i "s|</parameters>|    <parameter name=\"mid.pinned.version\" value=\"${PIN}\"/>\n\n</parameters>|g" /opt/agent2/config.xml
     fi
     
     if [[ ! -z "$PROXY" ]]
     then
-        sed -i "s|</parameters>|    <parameter name=\"mid.proxy.use_proxy\" value=\"true\"/>\n\n</parameters>|g" /opt/agent/config.xml
-        sed -i "s|</parameters>|    <parameter name=\"mid.proxy.host\" value=\"${PROXY}\"/>\n\n</parameters>|g" /opt/agent/config.xml
+        sed -i "s|</parameters>|    <parameter name=\"mid.proxy.use_proxy\" value=\"true\"/>\n\n</parameters>|g" /opt/agent2/config.xml
+        sed -i "s|</parameters>|    <parameter name=\"mid.proxy.host\" value=\"${PROXY}\"/>\n\n</parameters>|g" /opt/agent2/config.xml
     fi
 
     if [[ ! -z "$PROXY_PORT" ]]
     then
-        sed -i "s|</parameters>|    <parameter name=\"mid.proxy.port\" value=\"${PROXY_PORT}\"/>\n\n</parameters>|g" /opt/agent/config.xml
+        sed -i "s|</parameters>|    <parameter name=\"mid.proxy.port\" value=\"${PROXY_PORT}\"/>\n\n</parameters>|g" /opt/agent2/config.xml
     fi
     
     if [[ ! -z "$PROXY_USER" ]]
     then
-        sed -i "s|</parameters>|    <parameter name=\"mid.proxy.username\" value=\"${PROXY_USER}\"/>\n\n</parameters>|g" /opt/agent/config.xml
+        sed -i "s|</parameters>|    <parameter name=\"mid.proxy.username\" value=\"${PROXY_USER}\"/>\n\n</parameters>|g" /opt/agent2/config.xml
     fi
 
     if [[ ! -z "$PROXY_PASSWORD" ]]
     then
-        sed -i "s|</parameters>|    <parameter name=\"mid.proxy.password\" value=\"${PROXY_PASSWORD}\" encrypt=\"true\"/>\n\n</parameters>|g" /opt/agent/config.xml
+        sed -i "s|</parameters>|    <parameter name=\"mid.proxy.password\" value=\"${PROXY_PASSWORD}\" encrypt=\"true\"/>\n\n</parameters>|g" /opt/agent2/config.xml
     fi
 
     if [[ ! -z "$EXT_PARAMS" ]]
@@ -128,7 +122,7 @@ then
                 EXT_VALUE=$(jq -r '.value' <<< "$J_ROW");
                 EXT_TYPE=$(jq -r '.type' <<< "$J_ROW");
 
-                EXT_CHECK=`grep -P "<parameter name=\"$EXT_NAME\"" /opt/agent/config.xml`
+                EXT_CHECK=`grep -P "<parameter name=\"$EXT_NAME\"" /opt/agent2/config.xml`
                 if [[ "$EXT_TYPE" != "add" && -z "$EXT_CHECK" ]]
                 then
                     EXT_TYPE="add"
@@ -138,9 +132,9 @@ then
 
                 if [[ "$EXT_TYPE" == "add" ]]
                 then
-                    sed -i "s|</parameters>|    <parameter name=\"${EXT_NAME}\" value=\"${EXT_VALUE}\"/>\n</parameters>|g" /opt/agent/config.xml
+                    sed -i "s|</parameters>|    <parameter name=\"${EXT_NAME}\" value=\"${EXT_VALUE}\"/>\n</parameters>|g" /opt/agent2/config.xml
                 else
-                    sed -i "s|${EXT_CHECK}|    <parameter name=\"${EXT_NAME}\" value=\"${EXT_VALUE}\"/>|g" /opt/agent/config.xml
+                    sed -i "s|${EXT_CHECK}|    <parameter name=\"${EXT_NAME}\" value=\"${EXT_VALUE}\"/>|g" /opt/agent2/config.xml
                 fi
 
             done
@@ -155,8 +149,8 @@ else
 
     echo "DOCKER: update MID sever status";
 
-    SYS_ID=`grep -oP 'name="mid_sys_id" value="\K[^"]{32}' /opt/agent/config.xml`
-    URL=`grep -oP '<parameter name="url" value="\K[^"]+' /opt/agent/config.xml`
+    SYS_ID=`grep -oP 'name="mid_sys_id" value="\K[^"]{32}' /opt/agent2/config.xml`
+    URL=`grep -oP '<parameter name="url" value="\K[^"]+' /opt/agent2/config.xml`
 
     if [[ -z "$SYS_ID" || -z "$URL" ]]
     then
@@ -203,16 +197,16 @@ logmon(){
 # SIGTERM-handler
 term_handler() {
     echo "DOCKER: Stop MID server"
-    /opt/agent/bin/mid.sh stop & wait ${!}
+    /opt/agent2/bin/mid.sh stop & wait ${!}
     exit 143; # 128 + 15 -- SIGTERM
 }
 
 trap 'kill ${!}; term_handler' SIGTERM
 
-touch /opt/agent/logs/agent0.log.0
+touch /opt/agent2/logs/agent0.log.0
  
 echo "DOCKER: Start MID server"
-/opt/agent/bin/mid.sh start &
+/opt/agent2/bin/mid.sh start &
 
 
 # # # # # # # # #
@@ -222,7 +216,7 @@ echo "DOCKER: Start MID server"
 #
 
 # log file to check
-log_file=/opt/agent/logs/agent0.log.0
+log_file=/opt/agent2/logs/agent0.log.0
 
 # max age of log file
 ctime_max=300
@@ -255,5 +249,5 @@ done  &
 # show the logs in the console
 while true
 do
-    tail -F /opt/agent/logs/agent0.log.0 & wait ${!}
+    tail -F /opt/agent2/logs/agent0.log.0 & wait ${!}
 done
