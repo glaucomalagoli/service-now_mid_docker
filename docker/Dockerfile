@@ -11,11 +11,18 @@ RUN apt-get -q update && apt-get install -qy unzip \
     rm -rf /tmp/*
 
 ENV HOST "default-host"
+ENV HOST_2 "default-host_2"
 ENV SN_HOST_NAME ""
+ENV SN_HOST_NAME_2 ""
 ENV USER_NAME "default-user"
+ENV USER_NAME_2 "default-user_2"
 ENV PASSWORD "default-password"
+ENV PASSWORD_2 "default-password_2"
 ENV PROXY ""
+ENV PROXY_2 ""
 ENV PROXY_PORT ""
+ENV PROXY_PORT_2 ""
+
 
 ARG URL
 RUN echo "mid binary url: ${URL}"
@@ -29,7 +36,8 @@ RUN echo "pinned to version: ${VERSION}"
 RUN wget --progress=bar:force --no-check-certificate \
     ${URL} -O /tmp/mid.zip && \
     unzip -d /opt /tmp/mid.zip && \
-    chmod -R 755 /opt/agent && \
+    cp -r /opt/agent /opt/agent2 && \
+    chmod -R 755 /opt/* && \
     chown -R mid:mid /opt/* && \
     mv /opt/agent/config.xml /opt/. && \
     rm -rf /tmp/*
