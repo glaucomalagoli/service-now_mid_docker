@@ -55,7 +55,7 @@ if [[ -f /opt/agent2/config.xml ]]
 then
     if [[ -z `grep -oP 'name="mid_sys_id" value="\K[^"]{32}' /opt/agent2/config.xml` ]]
     then
-        echo "Docker: config.xml invalid, reconfigure MID server"
+        echo "Docker: config.xml invalid, reconfigure MID server (2)"
         rm -rf /opt/agent2/config.xml 
     fi
 fi
@@ -69,18 +69,18 @@ then
     
     cp /opt/config.xml /opt/agent2/.
     
-    if [[ ! -z "$SN_HOST_NAME" ]]
+    if [[ ! -z "$SN_HOST_NAME_2" ]]
     then
-        echo "Docker: configuring Host Name: $SN_HOST_NAME (using \$SN_HOST_NAME)"
-        sed -i "s|https://YOUR_INSTANCE.service-now.com|https://${SN_HOST_NAME}|g" /opt/agent2/config.xml
-    elif [[ ! -z "$HOST" ]]
+        echo "Docker: configuring Host Name: $SN_HOST_NAME_2 (using \$SN_HOST_NAME_2)"
+        sed -i "s|https://YOUR_INSTANCE.service-now.com|https://${SN_HOST_NAME_2}|g" /opt/agent2/config.xml
+    elif [[ ! -z "$HOST_2" ]]
     then
-        echo "Docker: configuring Host Name: ${HOST}.service-now.com (using \$HOST)"
-        sed -i "s|https://YOUR_INSTANCE.service-now.com|https://${HOST}.service-now.com|g" /opt/agent2/config.xml
+        echo "Docker: configuring Host Name: ${HOST_2}.service-now.com (using \$HOST_2)"
+        sed -i "s|https://YOUR_INSTANCE.service-now.com|https://${HOST_2}.service-now.com|g" /opt/agent2/config.xml
     fi
     
-    sed -i "s|YOUR_INSTANCE_USER_NAME_HERE|${USER_NAME}|g" /opt/agent2/config.xml
-    sed -i "s|YOUR_INSTANCE_PASSWORD_HERE|${PASSWORD}|g" /opt/agent2/config.xml
+    sed -i "s|YOUR_INSTANCE_USER_NAME_HERE|${USER_NAME_2}|g" /opt/agent2/config.xml
+    sed -i "s|YOUR_INSTANCE_PASSWORD_HERE|${PASSWORD_2}|g" /opt/agent2/config.xml
     sed -i "s|YOUR_MIDSERVER_NAME_GOES_HERE|${HOSTNAME}-mid.docker|g" /opt/agent2/config.xml
     
     if [[ ! -z "$PIN" ]]
@@ -88,15 +88,15 @@ then
         sed -i "s|</parameters>|    <parameter name=\"mid.pinned.version\" value=\"${PIN}\"/>\n\n</parameters>|g" /opt/agent2/config.xml
     fi
     
-    if [[ ! -z "$PROXY" ]]
+    if [[ ! -z "$PROXY_2" ]]
     then
         sed -i "s|</parameters>|    <parameter name=\"mid.proxy.use_proxy\" value=\"true\"/>\n\n</parameters>|g" /opt/agent2/config.xml
-        sed -i "s|</parameters>|    <parameter name=\"mid.proxy.host\" value=\"${PROXY}\"/>\n\n</parameters>|g" /opt/agent2/config.xml
+        sed -i "s|</parameters>|    <parameter name=\"mid.proxy.host\" value=\"${PROXY_2}\"/>\n\n</parameters>|g" /opt/agent2/config.xml
     fi
 
-    if [[ ! -z "$PROXY_PORT" ]]
+    if [[ ! -z "$PROXY_PORT_2" ]]
     then
-        sed -i "s|</parameters>|    <parameter name=\"mid.proxy.port\" value=\"${PROXY_PORT}\"/>\n\n</parameters>|g" /opt/agent2/config.xml
+        sed -i "s|</parameters>|    <parameter name=\"mid.proxy.port\" value=\"${PROXY_PORT_2}\"/>\n\n</parameters>|g" /opt/agent2/config.xml
     fi
     
     if [[ ! -z "$PROXY_USER" ]]
@@ -143,7 +143,7 @@ then
         fi
     fi
 else 
-    # if the MID server was killed while status was UP in servicenow
+    # if the MID server (2) was killed while status was UP in servicenow
     # the start process hangs with error message about already a MID
     # running with the same name :-| to fix, ensure the status is DOWN
 
@@ -157,14 +157,14 @@ else
         echo "DOCKER: update MID sever status: SYS_ID ($SYS_ID) or URL ($URL) not specified!";
     else
         HTTP_PROXY=""
-        if [[ ! -z "$PROXY" ]] 
+        if [[ ! -z "$PROXY_2" ]] 
         then
-            HTTP_PROXY="$PROXY"
+            HTTP_PROXY="$PROXY_2"
         fi
 
-        if [[ ! -z "$PROXY_PORT" ]] 
+        if [[ ! -z "$PROXY_PORT_2" ]] 
         then
-            HTTP_PROXY="${HTTP_PROXY}:${PROXY_PORT}"
+            HTTP_PROXY="${HTTP_PROXY}:${PROXY_PORT_2}"
         fi
 
         if [[ ! -z "$PROXY_USER" && ! -z "$PROXY_PASSWORD" ]]
@@ -182,7 +182,7 @@ else
 
         wget -O- --method=PUT --body-data='{"status":"Down"}' \
             --header='Content-Type:application/json' \
-            --user "${USER_NAME}" --password "${PASSWORD}" \
+            --user "${USER_NAME_2}" --password "${PASSWORD_2}" \
             ${WGET_CUSTOM_CACERT} \
             "${URL}/api/now/table/ecc_agent/${SYS_ID}?sysparm_fields=status"
         echo -e ""
@@ -196,7 +196,7 @@ logmon(){
 
 # SIGTERM-handler
 term_handler() {
-    echo "DOCKER: Stop MID server"
+    echo "DOCKER: Stop MID server (2)"
     /opt/agent2/bin/mid.sh stop & wait ${!}
     exit 143; # 128 + 15 -- SIGTERM
 }
@@ -205,13 +205,13 @@ trap 'kill ${!}; term_handler' SIGTERM
 
 touch /opt/agent2/logs/agent0.log.0
  
-echo "DOCKER: Start MID server"
+echo "DOCKER: Start MID server (2)"
 /opt/agent2/bin/mid.sh start &
 
 
 # # # # # # # # #
 # Logfile Monitor
-# if by any chance the MID server hangs (e.g. upgrade) the log file will not be updated
+# if by any chance the MID server (2) hangs (e.g. upgrade) the log file will not be updated
 # in that case force the container to stop
 #
 
@@ -236,8 +236,8 @@ do
     logmon "${log_file} last updated ${ctime_diff} sec ago"
 
     if [ "${ctime_diff}" -ge "${ctime_max}" ]; then
-        logmon "${log_file} was not updated for ${ctime_max}sec, MID server potentially frozen."
-        logmon "Stopping MID server process $pid now!"
+        logmon "${log_file} was not updated for ${ctime_max}sec, MID server (2) potentially frozen."
+        logmon "Stopping MID server (2) process $pid now!"
         kill -TERM $pid
         break
     else
