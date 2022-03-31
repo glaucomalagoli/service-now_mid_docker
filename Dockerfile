@@ -2,9 +2,6 @@ FROM alpine:3.14.0
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #
-#   The MID Server image can be found here:
-#   https://github.com/bmoers/docker-mid-server/blob/master/docker/Dockerfile
-#
 #   This Dockerfile is only to refresh the MID docker images
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
