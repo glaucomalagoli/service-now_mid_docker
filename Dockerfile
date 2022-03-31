@@ -1,10 +1,10 @@
 FROM alpine:3.14.0
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-#
-#   This Dockerfile is only to refresh the MID docker images
-#
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # ##
+#                                                                            #
+#   This Dockerfile is only to refresh the MID docker images                 #
+#                                                                            #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # ##
 
 RUN apk add --update nodejs \
     npm \
