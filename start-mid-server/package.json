@@ -1,0 +1,20 @@
+{
+  "name": "start-mid-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "async-child-process": "^1.1.1",
+    "bluebird": "^3.7.2",
+    "minimist": "^1.2.5",
+    "request": "^2.88.2",
+    "request-promise": "^4.2.6",
+    "uuid": "^8.3.2"
+  }
+}
