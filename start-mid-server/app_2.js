@@ -1,28 +1,27 @@
-
 const request = require('request-promise');
 const Promise = require('bluebird');
 const { v4: uuid } = require('uuid');
 const { execAsync } = require('async-child-process');
 
-const { HOST, SN_HOST_NAME, USER_NAME, PASSWORD, PROXY, PROXY_PORT } = (process.env.HOST || process.env.SN_HOST_NAME) ? process.env : require('minimist')(process.argv.slice(2));
+const { HOST_2, SN_HOST_NAME_2, USER_NAME_2, PASSWORD_2, PROXY_2, PROXY_PORT_2 } = (process.env.HOST_2 || process.env.SN_HOST_NAME_2) ? process.env : require('minimist')(process.argv.slice(2));
 
-const FQDN = (SN_HOST_NAME) ? SN_HOST_NAME : `${HOST}.service-now.com`;
+const FQDN = (SN_HOST_NAME_2) ? SN_HOST_NAME_2 : `${HOST_2}.service-now.com`;
 
 const start = () => {
     return Promise.try(() => {
-        if (!HOST && !SN_HOST_NAME)
-            throw Error('HOST or SN_HOST_NAME is mandatory');
-        if (!USER_NAME)
-            throw Error('USER_NAME is mandatory');
-        if (!PASSWORD)
-            throw Error('PASSWORD is mandatory');
+        if (!HOST_2 && !SN_HOST_NAME_2)
+            throw Error('HOST_2 or SN_HOST_NAME_2 is mandatory');
+        if (!USER_NAME_2)
+            throw Error('USER_NAME_2 is mandatory');
+        if (!PASSWORD_2)
+            throw Error('PASSWORD_2 is mandatory');
 
     }).then(() => {
 
         return request(`https://${FQDN}/stats.do`, {
             auth: {
-                user: USER_NAME,
-                password: PASSWORD
+                user: USER_NAME_2,
+                password: PASSWORD_2
             }
         }).then((xml) => {
             let regex = /Build name:\s+(\w*)/im
@@ -74,7 +73,7 @@ const start = () => {
 
         console.log(`Starting docker container '${name}' for environment '${FQDN}'`);
         
-        const command = `docker run -d --name ${name}  --env SN_HOST_NAME=${FQDN} --env USER_NAME=${USER_NAME} --env PASSWORD=${PASSWORD} ${(PROXY) ? `--env PROXY=${PROXY}` : ''} ${(PROXY_PORT) ? `--env PROXY_PORT=${PROXY_PORT}` : ''} moers/mid-server:${tag}`;
+        const command = `docker run -d --name ${name}  --env SN_HOST_NAME_2=${FQDN} --env USER_NAME_2=${USER_NAME_2} --env PASSWORD_2=${PASSWORD_2} ${(PROXY_2) ? `--env PROXY_2=${PROXY_2}` : ''} ${(PROXY_PORT_2) ? `--env PROXY_PORT_2=${PROXY_PORT_2}` : ''} moers/mid-server:${tag}`;
         return execAsync(command, { cwd: './' }).then(({ stdout, stderr }) => {
             console.log(stdout);
         })
