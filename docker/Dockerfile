@@ -73,8 +73,12 @@ RUN zip -q -d /opt/agent/lib/log4j-core*.jar org/apache/logging/log4j/core/looku
 # HEALTHCHECK --interval=15s --retries=6 --timeout=5s --start-period=30s CMD pgrep -af /opt/agent/bin/./wrapper-linux-x86-64 | grep `cat /opt/agent/work/mid.pid` || exit 1 
 
 ADD ./start.sh /opt
-RUN chmod +x /opt/start.sh
+RUN chmod +x /opt/start_1.sh
+
+ADD ./start.sh /opt
+RUN chmod +x /opt/start_2.sh
 
 USER mid
 
-CMD ["/opt/start.sh"]
+CMD ["/opt/start_1.sh"]
+CMD ["/opt/start_2.sh"]
